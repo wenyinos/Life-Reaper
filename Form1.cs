@@ -102,7 +102,19 @@ namespace Life_Reaper
 
         private void BtnClose_Click(object? sender, EventArgs e)
         {
-            Application.Exit();
+            ShowCloseWarning();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            ShowCloseWarning();
+        }
+
+        private void ShowCloseWarning()
+        {
+            WarningForm warning = new WarningForm();
+            warning.ShowDialog(this);
         }
 
         private void PanelTitleBar_MouseDown(object? sender, MouseEventArgs e)
