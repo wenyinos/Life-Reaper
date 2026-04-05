@@ -1,53 +1,53 @@
 # Life Reaper
 
-A Windows Forms application inspired by the classic WannaCry ransomware UI style, reimagined as a playful "续命" (Life Extension) theme.
+一个受经典 WannaCry 勒索软件界面启发的 Windows Forms 应用程序，重新演绎为"续命"主题的趣味桌面程序。
 
-## Features
+## 功能特性
 
-- Retro ransomware-style UI design
-- Countdown timer with real-time updates
-- Bitcoin payment simulation
-- Borderless, always-on-top window
-- Custom styling with red and gray color scheme
+- 复古勒索软件风格界面设计
+- 实时倒计时器
+- 比特币支付模拟
+- 无边框、置顶窗口
+- 红灰配色方案
 
-## Requirements
+## 环境要求
 
 - .NET 10.0
-- Windows OS
+- Windows 操作系统
 
-## Getting Started
+## 快速开始
 
-### Prerequisites
+### 前置条件
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
 
-### Build
+### 构建项目
 
 ```bash
 dotnet build
 ```
 
-### Run
+### 运行程序
 
 ```bash
 dotnet run
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 Life Reaper/
-├── Form1.cs              # Main form logic
-├── Form1.Designer.cs     # Form UI design
-├── Program.cs            # Application entry point
-├── Life Reaper.csproj    # Project configuration
-└── Life Reaper.slnx      # Solution file
+├── Form1.cs              # 主窗体逻辑
+├── Form1.Designer.cs     # 窗体界面设计
+├── Program.cs            # 应用程序入口
+├── Life Reaper.csproj    # 项目配置文件
+└── Life Reaper.slnx      # 解决方案文件
 ```
 
-## License
+## 开源许可证
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
-## Disclaimer
+## 免责声明
 
-This project is created for **educational and entertainment purposes only**. It does not contain any malicious functionality. No files are encrypted or harmed in any way.
+本项目仅用于**学习和娱乐目的**，不包含任何恶意功能。不会加密或损坏任何文件。
