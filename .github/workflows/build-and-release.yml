@@ -73,7 +73,9 @@ jobs:
 
     - name: 创建输出目录
       run: |
-        if not exist "installer\output" mkdir "installer\output"
+        if (!(Test-Path "installer\output")) {
+          New-Item -ItemType Directory -Path "installer\output"
+        }
 
     - name: 构建安装包
       run: |
