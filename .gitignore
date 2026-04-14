@@ -108,3 +108,9 @@ Desktop.ini
 
 ## Mac
 .DS_Store
+
+## Build artifacts
+publish/
+installer/output/
+*.zip
+*.msi
