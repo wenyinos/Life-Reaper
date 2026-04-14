@@ -7,6 +7,7 @@ namespace Life_Reaper
         private int secondsElapsed;
         private bool isEmphasized;
         private Point originalLocation;
+        private bool isDragging;
 
         public Form1()
         {
