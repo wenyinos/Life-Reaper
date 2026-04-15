@@ -114,3 +114,4 @@ publish/
 installer/output/
 *.zip
 *.msi
+GEMINI.md
