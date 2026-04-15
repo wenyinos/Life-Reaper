@@ -1,49 +1,52 @@
-# Repository Guidelines
+# Life Reaper - Agent Guidelines
 
-## Project Structure & Module Organization
+## Quick Start
 
-This repository is a Windows Forms app targeting `.NET` (`net10.0-windows`).
+**Run app**: `dotnet run` (Windows Forms app)
+**Build portable**: `dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true --output publish`
+**Build installer**: `.\build-installer.bat` (requires Inno Setup 6)
 
-- Entry point: `Program.cs` (starts `Form1`).
-- Main UI: `Form1.cs`, generated layout in `Form1.Designer.cs`, resources in `Form1.resx`.
-- Dialogs/helpers: `WarningForm.cs`, `CustomMessageBox.cs`.
-- Installer: `installer/setup.iss` (Inno Setup script), `build-installer.bat` (local packaging helper).
-- CI/CD: `.github/workflows/build-and-release.yml` (build, package, tag-based release).
-- Build outputs (do not commit): `bin/`, `obj/`, `publish/`, `installer/output/`.
+## Critical Architecture Notes
 
-## Build, Test, and Development Commands
+- **Entry point**: `Program.cs:14` → `Application.Run(new Form1())`
+- **Main logic**: `Form1.cs` contains all countdown, UI, and drag behavior
+- **UI components**: All controls created programmatically (no designer usage)
+- **Custom dialogs**: `CustomMessageBox.cs`, `WarningForm.cs` - both draggable, red-themed
 
-Run locally on Windows with the .NET SDK installed:
+## Key Implementation Details
 
-```powershell
-dotnet restore
-dotnet run
-dotnet build -c Release
-dotnet publish -c Release -r win-x64 --self-contained true --output publish `
-  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true
-```
+- **9:59 countdown**: Starts immediately on form load, stops at zero showing warning message
+- **Window shaking**: Every 59 seconds during countdown (async shake animation)
+- **Font emphasis**: Increases font size and changes color during shake periods
+- **Drag behavior**: Only from title bar panels (`panelTitleBar`, `lblTitle`)
+- **Close prevention**: Standard close buttons show `WarningForm` instead of closing
+- **Always-on-top**: Both main form and dialogs set `TopMost = true`
 
-Build an installer (requires Inno Setup 6):
+## Build & Deployment Quirks
 
-```powershell
-.\build-installer.bat
-# or: & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\setup.iss"
-```
+- **Self-contained**: Must target `win-x64` for single-file deployment
+- **Inno Setup path**: Script checks both `Program Files (x86)` and `Program Files`
+- **CI/CD**: Automated builds on `main` branch pushes, releases only on version tags
+- **No tests**: Project has no test framework - avoid adding unless explicitly requested
 
-## Coding Style & Naming Conventions
+## Style Conventions
 
-- Indentation: 4 spaces; C# braces on new lines (match existing files).
-- Nullability: keep `Nullable` annotations (`object? sender`) and address warnings instead of suppressing.
-- Naming: `PascalCase` for types/methods; `camelCase` for private fields; keep WinForms control prefixes (`lblX`, `btnX`, `panelX`) consistent with the designer.
-- Avoid manual edits to `Form1.Designer.cs` unless necessary; prefer the WinForms designer to prevent drift.
+- **Null safety**: Enabled (`<Nullable>enable</Nullable>`)
+- **Naming**: PascalCase for public members, camelCase for private fields
+- **Braces**: New line for all blocks
+- **Resources**: All UI created in code, no designer files used
+- **Disposal**: Proper cleanup in `OnFormClosed` with null checks
 
-## Testing Guidelines
+## Important Gotchas
 
-There is no dedicated test project currently; CI runs `dotnet test` but continues if none exist.
-If adding tests, create a `tests/` folder and a `*.Tests` project (xUnit/MSTest), and keep test names readable (e.g., `TimerCountdown_Tick_StopsAtZero`).
+- **Font disposal**: `countdownNormalFont`/`countdownEmphasizeFont` must be disposed
+- **Shake cancellation**: `shakeCts` cancels ongoing animations during drag operations
+- **Async operations**: `EmphasizeCountdown()` uses async `ShakeWindow()` method
+- **Memory leaks**: Ensure timer and font resources are properly disposed
 
-## Commit & Pull Request Guidelines
+## Release Process
 
-- Commit messages follow a Conventional Commits-like pattern: `feat(ui): ...`, `fix(ci): ...`, `docs: ...`, `chore(workflow): ...`, `refactor(...): ...`.
-- PRs should include: a short description, linked issue (if any), and screenshots/GIFs for UI changes.
-- Releases: update `AppVersion` in `installer/setup.iss` when shipping, and tag `vX.Y.Z` to trigger the GitHub Actions release workflow.
+1. Update version in `installer/setup.iss` 
+2. Create tag: `git tag vX.Y.Z`
+3. Push tag: `git push origin vX.Y.Z`
+4. CI auto-releases portable + installer to GitHub Releases
