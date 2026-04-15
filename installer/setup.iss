@@ -6,6 +6,7 @@ DefaultDirName={autopf}\LifeReaper
 DefaultGroupName=续命 Life Reaper
 OutputDir=output
 OutputBaseFilename=LifeReaper-Setup
+SetupIconFile=..\favicon.ico
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=admin

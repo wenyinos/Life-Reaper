@@ -8,6 +8,10 @@ namespace Life_Reaper
         private bool isEmphasized;
         private Point originalLocation;
         private bool isDragging;
+        private System.Windows.Forms.Timer? emphasizeResetTimer;
+        private Font? countdownNormalFont;
+        private Font? countdownEmphasizeFont;
+        private CancellationTokenSource? shakeCts;
 
         public Form1()
         {
@@ -15,15 +19,34 @@ namespace Life_Reaper
             timeLeft = TimeSpan.FromMinutes(9).Add(TimeSpan.FromSeconds(59));
             secondsElapsed = 0;
             isEmphasized = false;
-            originalLocation = Location;
             UpdateCountdownDisplay();
+
+            // Drag only from title bar (prevents accidental jumps when dragging elsewhere).
+            panelTitleBar.MouseMove += PanelTitleBar_MouseMove;
+            panelTitleBar.MouseUp += PanelTitleBar_MouseUp;
+            lblTitle.MouseDown += PanelTitleBar_MouseDown;
+            lblTitle.MouseMove += PanelTitleBar_MouseMove;
+            lblTitle.MouseUp += PanelTitleBar_MouseUp;
+
+            // Reuse resources instead of allocating on every emphasize tick.
+            countdownNormalFont = new Font("Consolas", 32F, FontStyle.Bold, GraphicsUnit.Point);
+            countdownEmphasizeFont = new Font("Consolas", 42F, FontStyle.Bold, GraphicsUnit.Point);
+            emphasizeResetTimer = new System.Windows.Forms.Timer { Interval = 1500 };
+            emphasizeResetTimer.Tick += EmphasizeResetTimer_Tick;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            // Location is finalized after the form is shown (StartPosition=CenterScreen).
+            originalLocation = Location;
         }
 
         private void TimerCountdown_Tick(object? sender, EventArgs e)
         {
             if (timeLeft.TotalSeconds > 0)
             {
-                timeLeft = timeLeft.Add(TimeSpan.FromSeconds(-1));
+                timeLeft = timeLeft - TimeSpan.FromSeconds(1);
                 secondsElapsed++;
                 UpdateCountdownDisplay();
 
@@ -43,22 +66,15 @@ namespace Life_Reaper
         private void EmphasizeCountdown()
         {
             isEmphasized = true;
-            lblCountdown.Font = new Font("Consolas", 42F, FontStyle.Bold, GraphicsUnit.Point);
+            if (countdownEmphasizeFont != null)
+            {
+                lblCountdown.Font = countdownEmphasizeFont;
+            }
             lblCountdown.ForeColor = Color.FromArgb(255, 0, 0);
             ShakeWindow();
 
-            System.Windows.Forms.Timer resetTimer = new System.Windows.Forms.Timer();
-            resetTimer.Interval = 1500;
-            resetTimer.Tick += (s, e) =>
-            {
-                lblCountdown.Font = new Font("Consolas", 32F, FontStyle.Bold, GraphicsUnit.Point);
-                lblCountdown.ForeColor = Color.FromArgb(192, 0, 0);
-                Location = originalLocation;
-                isEmphasized = false;
-                ((System.Windows.Forms.Timer)s!).Stop();
-                ((System.Windows.Forms.Timer)s!).Dispose();
-            };
-            resetTimer.Start();
+            emphasizeResetTimer?.Stop();
+            emphasizeResetTimer?.Start();
         }
 
         private async void ShakeWindow()
@@ -67,18 +83,43 @@ namespace Life_Reaper
             int shakeDistance = 15;
             int delay = 50;
 
-            for (int i = 0; i < shakeCount; i++)
+            shakeCts?.Cancel();
+            shakeCts?.Dispose();
+            shakeCts = new CancellationTokenSource();
+            CancellationToken token = shakeCts.Token;
+
+            Point baseLocation = Location;
+            originalLocation = baseLocation;
+
+            try
             {
-                int offsetX = (i % 2 == 0) ? shakeDistance : -shakeDistance;
-                Location = new Point(originalLocation.X + offsetX, originalLocation.Y);
-                await Task.Delay(delay);
+                for (int i = 0; i < shakeCount; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    int offsetX = (i % 2 == 0) ? shakeDistance : -shakeDistance;
+                    Location = new Point(baseLocation.X + offsetX, baseLocation.Y);
+                    await Task.Delay(delay, token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore: a newer shake (or drag) replaced this one.
+            }
+            finally
+            {
+                // If the user is dragging, don't fight their input.
+                if (!isDragging)
+                {
+                    Location = baseLocation;
+                }
             }
         }
 
         private void UpdateCountdownDisplay()
         {
-            lblCountdown.Text = timeLeft.ToString(@"hh\:mm\:ss");
-            lblTimer.Text = $"你的寿命剩余时间：{timeLeft.ToString(@"hh\:mm\:ss")}";
+            string text = timeLeft.ToString(@"hh\:mm\:ss");
+            lblCountdown.Text = text;
+            lblTimer.Text = $"你的寿命剩余时间：{text}";
         }
 
         private void BtnDecrypt_Click(object? sender, EventArgs e)
@@ -120,19 +161,64 @@ namespace Life_Reaper
 
         private void PanelTitleBar_MouseDown(object? sender, MouseEventArgs e)
         {
-            mouseOffset = new Point(-e.X, -e.Y);
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            isDragging = true;
+            // Offset from form origin to mouse pointer in screen coordinates.
+            Point mousePos = Control.MousePosition;
+            mouseOffset = new Point(mousePos.X - Location.X, mousePos.Y - Location.Y);
+            shakeCts?.Cancel(); // stop shaking while the user drags
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        private void PanelTitleBar_MouseMove(object? sender, MouseEventArgs e)
         {
-            base.OnMouseMove(e);
+            if (!isDragging || e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            Point mousePos = Control.MousePosition;
+            Location = new Point(mousePos.X - mouseOffset.X, mousePos.Y - mouseOffset.Y);
+            originalLocation = Location;
+        }
+
+        private void PanelTitleBar_MouseUp(object? sender, MouseEventArgs e)
+        {
             if (e.Button == MouseButtons.Left)
             {
-                Point mousePos = Control.MousePosition;
-                mousePos.Offset(mouseOffset.X, mouseOffset.Y);
-                Location = mousePos;
-                originalLocation = mousePos;
+                isDragging = false;
             }
+        }
+
+        private void EmphasizeResetTimer_Tick(object? sender, EventArgs e)
+        {
+            emphasizeResetTimer?.Stop();
+
+            if (countdownNormalFont != null)
+            {
+                lblCountdown.Font = countdownNormalFont;
+            }
+
+            lblCountdown.ForeColor = Color.FromArgb(192, 0, 0);
+            if (!isDragging)
+            {
+                Location = originalLocation;
+            }
+            isEmphasized = false;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            emphasizeResetTimer?.Stop();
+            emphasizeResetTimer?.Dispose();
+            shakeCts?.Cancel();
+            shakeCts?.Dispose();
+            countdownNormalFont?.Dispose();
+            countdownEmphasizeFont?.Dispose();
+            base.OnFormClosed(e);
         }
     }
 }

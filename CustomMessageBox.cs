@@ -9,6 +9,7 @@ namespace Life_Reaper
         private Label? lblMessage;
         private Button? btnOk;
         private Point mouseOffset;
+        private bool isDragging;
 
         private CustomMessageBox(string message, string title)
         {
@@ -54,6 +55,7 @@ namespace Life_Reaper
             lblTitle.ForeColor = Color.White;
             lblTitle.Location = new Point(12, 6);
             lblTitle.AutoSize = true;
+            lblTitle.MouseDown += PanelTitleBar_MouseDown;
 
             // Close button
             btnClose = new Button();
@@ -105,17 +107,34 @@ namespace Life_Reaper
 
         private void PanelTitleBar_MouseDown(object? sender, MouseEventArgs e)
         {
-            mouseOffset = new Point(-e.X, -e.Y);
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            isDragging = true;
+            Point mousePos = Control.MousePosition;
+            mouseOffset = new Point(mousePos.X - Location.X, mousePos.Y - Location.Y);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            if (!isDragging || e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            Point mousePos = Control.MousePosition;
+            Location = new Point(mousePos.X - mouseOffset.X, mousePos.Y - mouseOffset.Y);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
             if (e.Button == MouseButtons.Left)
             {
-                Point mousePos = Control.MousePosition;
-                mousePos.Offset(mouseOffset.X, mouseOffset.Y);
-                Location = mousePos;
+                isDragging = false;
             }
         }
 
