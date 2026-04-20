@@ -51,3 +51,4 @@
 3. Push tag: `git push origin vX.Y.Z`
 4. CI auto-releases portable + installer to GitHub Releases
 
+
