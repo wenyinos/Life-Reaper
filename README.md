@@ -1,41 +1,40 @@
-# 续命 Life Reaper 💀
+# Life Reaper
 
-一个受经典 WannaCry 界面启发的趣味桌面程序，以"续命"为主题的倒计时应用。
+[中文文档](README.zh-CN.md)
 
-## ✨ 特性
+A fun desktop countdown app inspired by the classic WannaCry interface, themed around "life extension".
 
-- ⏰ 9分59秒倒计时器
-- 🎨 复古风格界面设计
-- 🖱️ 支持拖拽移动、始终置顶
-- 📦 便携版/安装包两种发布方式
+## Features
 
-## 🚀 快速开始
+- 9m59s countdown timer
+- Retro-style UI design
+- Draggable window with always-on-top behavior
+- Two release formats: portable and installer
 
-### 环境要求
+## Quick Start
+
+### Requirements
 - .NET 6.0 SDK
-- Windows 系统
+- Windows
 
-### 运行程序
+### Run
 ```bash
 dotnet run
 ```
 
-### 构建安装包
+### Build installer
 ```bash
-# 双击运行
 build-installer.bat
 ```
 
-## 📥 下载
+## Download
 
-前往 [Releases](https://github.com/wenyinos/Life-Reaper/releases) 下载最新版本:
-- **便携版** - 解压即运行
-- **安装包版** - 完整安装体验
+Get the latest release from [Releases](https://github.com/wenyinos/Life-Reaper/releases):
+- Portable: extract and run
+- Installer: full setup experience
 
-## 📄 许可证
+## License
 
-MIT License - 详见 [LICENSE](LICENSE)
+MIT License. See [LICENSE](LICENSE).
 
----
-
-⚠️ **免责声明**: 本项目仅用于学习和娱乐目的，不包含任何恶意功能。
+Disclaimer: This project is for learning and entertainment only, and contains no malicious functionality.
