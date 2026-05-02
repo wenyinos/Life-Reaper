@@ -5,13 +5,12 @@ AppPublisher=wenyinos
 DefaultDirName={autopf}\LifeReaper
 DefaultGroupName=续命 Life Reaper
 OutputDir=output
-OutputBaseFilename=LifeReaper-Setup-x64
+OutputBaseFilename=LifeReaper-Setup-x86
 SetupIconFile=..\favicon.ico
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=admin
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x86
 UninstallDisplayIcon={app}\LifeReaper.exe
 WizardStyle=modern
 
@@ -22,7 +21,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\publish\x64\Life Reaper.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\publish\x86\Life Reaper.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\续命 Life Reaper"; Filename: "{app}\Life Reaper.exe"

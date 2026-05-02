@@ -15,13 +15,21 @@ permissions:
   packages: write
 
 env:
-  DOTNET_VERSION: '10.0.x'
+  DOTNET_VERSION: '6.0.x'
   APP_NAME: "Life Reaper"
   OUTPUT_DIR: installer/output
 
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runtime: win7-x64
+          - arch: x86
+            runtime: win7-x86
     
     steps:
     - name: 检出代码
@@ -42,19 +50,19 @@ jobs:
       run: dotnet test --no-build --verbosity normal
       continue-on-error: true
 
-    - name: 发布自包含应用
+    - name: 发布自包含应用 (${{ matrix.runtime }})
       run: |
-        dotnet publish -c Release -r win-x64 --self-contained true `
+        dotnet publish -c Release -r ${{ matrix.runtime }} --self-contained true `
           -p:PublishSingleFile=true `
           -p:IncludeNativeLibrariesForSelfExtract=true `
           -p:PublishReadyToRun=true `
-          --output publish
+          --output publish/${{ matrix.arch }}
 
-    - name: 上传发布文件
+    - name: 上传发布文件 (${{ matrix.arch }})
       uses: actions/upload-artifact@v4
       with:
-        name: LifeReaper-portable
-        path: publish/
+        name: LifeReaper-portable-${{ matrix.arch }}
+        path: publish/${{ matrix.arch }}/
         if-no-files-found: error
 
   build-installer:
@@ -65,11 +73,17 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 下载发布文件
+    - name: 下载 x64 发布文件
       uses: actions/download-artifact@v4
       with:
-        name: LifeReaper-portable
-        path: publish
+        name: LifeReaper-portable-x64
+        path: publish/x64
+
+    - name: 下载 x86 发布文件
+      uses: actions/download-artifact@v4
+      with:
+        name: LifeReaper-portable-x86
+        path: publish/x86
 
     - name: 安装 Inno Setup
       run: |
@@ -85,12 +99,20 @@ jobs:
     - name: 构建安装包
       run: |
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\setup.iss"
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\setup-x86.iss"
 
-    - name: 上传安装包
+    - name: 上传安装包 x64
       uses: actions/upload-artifact@v4
       with:
-        name: LifeReaper-setup
-        path: installer/output/LifeReaper-Setup.exe
+        name: LifeReaper-setup-x64
+        path: installer/output/LifeReaper-Setup-x64.exe
+        if-no-files-found: error
+
+    - name: 上传安装包 x86
+      uses: actions/upload-artifact@v4
+      with:
+        name: LifeReaper-setup-x86
+        path: installer/output/LifeReaper-Setup-x86.exe
         if-no-files-found: error
 
   release:
@@ -99,29 +121,45 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
-    - name: 下载发布文件
+    - name: 下载 x64 发布文件
       uses: actions/download-artifact@v4
       with:
-        name: LifeReaper-portable
-        path: LifeReaper-portable
+        name: LifeReaper-portable-x64
+        path: LifeReaper-portable-x64
 
-    - name: 下载安装包
+    - name: 下载 x86 发布文件
       uses: actions/download-artifact@v4
       with:
-        name: LifeReaper-setup
-        path: LifeReaper-setup
+        name: LifeReaper-portable-x86
+        path: LifeReaper-portable-x86
+
+    - name: 下载 x64 安装包
+      uses: actions/download-artifact@v4
+      with:
+        name: LifeReaper-setup-x64
+        path: LifeReaper-setup-x64
+
+    - name: 下载 x86 安装包
+      uses: actions/download-artifact@v4
+      with:
+        name: LifeReaper-setup-x86
+        path: LifeReaper-setup-x86
 
     - name: 创建压缩包
       run: |
-        Compress-Archive -Path LifeReaper-portable/* -DestinationPath LifeReaper-portable-x64.zip
-        Copy-Item LifeReaper-setup/LifeReaper-Setup.exe LifeReaper-Setup-x64.exe
+        Compress-Archive -Path LifeReaper-portable-x64/* -DestinationPath LifeReaper-portable-x64.zip
+        Compress-Archive -Path LifeReaper-portable-x86/* -DestinationPath LifeReaper-portable-x86.zip
+        Copy-Item LifeReaper-setup-x64/LifeReaper-Setup-x64.exe LifeReaper-Setup-x64.exe
+        Copy-Item LifeReaper-setup-x86/LifeReaper-Setup-x86.exe LifeReaper-Setup-x86.exe
 
     - name: 创建 Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
           LifeReaper-portable-x64.zip
+          LifeReaper-portable-x86.zip
           LifeReaper-Setup-x64.exe
+          LifeReaper-Setup-x86.exe
         draft: false
         prerelease: false
         generate_release_notes: true

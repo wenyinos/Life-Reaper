@@ -14,7 +14,7 @@
 ### 工作流程
 
 #### 1. 构建任务 (`build`)
-- 安装 .NET 10.0 SDK
+- 安装 .NET 6.0 SDK
 - 还原 NuGet 包
 - 编译项目
 - 运行测试(如果有)
@@ -81,7 +81,7 @@ git push origin v1.0.0
 
 ## 注意事项
 
-1. **.NET 版本**: 项目使用 .NET 10.0,确保 GitHub Actions 环境支持
+1. **.NET 版本**: 项目使用 .NET 6.0,确保 GitHub Actions 环境支持
 2. **Windows 专用**: 由于是 Windows Forms 应用,只能在 Windows 环境构建
 3. **Inno Setup**: 自动通过 Chocolatey 安装,无需手动配置
 4. **Release 创建**: 只有推送标签时才会自动创建 Release
@@ -92,7 +92,7 @@ git push origin v1.0.0
 
 ```yaml
 env:
-  DOTNET_VERSION: '10.0.x'  # .NET SDK 版本
+  DOTNET_VERSION: '6.0.x'  # .NET SDK 版本
   APP_NAME: "Life Reaper"   # 应用名称
   OUTPUT_DIR: installer/output  # 输出目录
 ```

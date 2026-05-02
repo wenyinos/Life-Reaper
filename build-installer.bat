@@ -11,10 +11,16 @@ if exist "installer\output" rmdir /s /q "installer\output"
 echo 完成!
 echo.
 
-echo [2/3] 发布自包含应用程序...
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true --output publish
+echo [2/3] 发布自包含应用程序 (win7-x64 / win7-x86)...
+dotnet publish -c Release -r win7-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true --output publish\x64
 if errorlevel 1 (
-    echo 发布失败!
+    echo x64 发布失败!
+    pause
+    exit /b 1
+)
+dotnet publish -c Release -r win7-x86 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true --output publish\x86
+if errorlevel 1 (
+    echo x86 发布失败!
     pause
     exit /b 1
 )
@@ -46,14 +52,21 @@ echo.
 echo 开始构建安装包...
 "%ISCC_PATH%" "installer\setup.iss"
 if errorlevel 1 (
-    echo 安装包构建失败!
+    echo x64 安装包构建失败!
+    pause
+    exit /b 1
+)
+"%ISCC_PATH%" "installer\setup-x86.iss"
+if errorlevel 1 (
+    echo x86 安装包构建失败!
     pause
     exit /b 1
 )
 echo.
 echo ========================================
 echo  安装包构建成功!
-echo  输出位置: installer\LifeReaper-Setup.exe
+echo  输出位置: installer\output\LifeReaper-Setup-x64.exe
+echo  输出位置: installer\output\LifeReaper-Setup-x86.exe
 echo ========================================
 echo.
 pause
